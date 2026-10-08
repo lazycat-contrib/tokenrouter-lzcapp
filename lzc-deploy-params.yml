@@ -1,0 +1,35 @@
+params:
+    - id: admin_email
+      type: string
+      name: "Admin email"
+      description: "Login name of the first administrator. Also used as the default recipient for system mail."
+      default_value: "admin@tokenrouter.local"
+
+    - id: admin_password
+      type: secret
+      name: "Admin password"
+      description: "Password for the first administrator (12+ characters with letters and digits recommended). Leave blank to auto-generate one and print it once into the app log."
+      default_value: ""
+
+locales:
+    zh:
+        admin_email:
+            name: "管理员邮箱"
+            description: "首个管理员的登录名，也作为系统邮件的默认收件地址。"
+        admin_password:
+            name: "管理员密码"
+            description: "首个管理员的密码（建议 12 位以上、含字母和数字）。留空则自动生成，并在应用日志里打印一次。"
+    zh_CN:
+        admin_email:
+            name: "管理员邮箱"
+            description: "首个管理员的登录名，也作为系统邮件的默认收件地址。"
+        admin_password:
+            name: "管理员密码"
+            description: "首个管理员的密码（建议 12 位以上、含字母和数字）。留空则自动生成，并在应用日志里打印一次。"
+    en:
+        admin_email:
+            name: "Admin email"
+            description: "Login name of the first administrator; also the default recipient for system mail."
+        admin_password:
+            name: "Admin password"
+            description: "Password for the first administrator (12+ characters, letters and digits recommended). Leave blank to auto-generate and print once in the app log."

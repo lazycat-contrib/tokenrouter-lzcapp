@@ -1,0 +1,66 @@
+version: 1
+
+project:
+  root: .
+  build_config: lzc-build.yml
+  package_file: package.yml
+  output: dist/tokenrouter.lpk
+  target_arch: amd64
+
+update:
+  strategy: publish
+  allow_downgrade: false
+  version_source:
+    type: image
+    image: tokenrouter
+
+build:
+  toolchains: []
+  run_buildscript: false
+
+images:
+  # 主应用：上游 0.x 三段式 SemVer（另有 0.1.x-amd64/-arm64 变体和 latest，正则排除掉）
+  - id: tokenrouter
+    target: service
+    service: tokenrouter
+    source: ghcr.io/tokenflux/tokenrouter
+    channel: stable
+    sort: semver
+    tag_regex: '^[0-9]+\.[0-9]+\.[0-9]+$'
+    delivery:
+      # 镜像模式：转存到懒猫镜像源并改写 manifest 里对应服务的 image
+      mode: lazycat
+  # 依赖 PostgreSQL：18.x 两段式 tag（18.6-alpine）→ 映射成 18.6.0 便于比较排序
+  - id: postgres
+    target: service
+    service: db
+    source: library/postgres
+    channel: custom
+    sort: semver
+    tag_regex: '^18\.[0-9]+-alpine$'
+    version_regex: '^(?P<version>18\.[0-9]+)-alpine$'
+    version_template: '{version}.0'
+    delivery:
+      mode: lazycat
+  # 依赖 Redis：8.x 两段式 tag（8.8-alpine）→ 映射成 8.8.0
+  - id: redis
+    target: service
+    service: cache
+    source: library/redis
+    channel: custom
+    sort: semver
+    tag_regex: '^8\.[0-9]+-alpine$'
+    version_regex: '^(?P<version>8\.[0-9]+)-alpine$'
+    version_template: '{version}.0'
+    delivery:
+      mode: lazycat
+
+stores:
+  official:
+    # 只发喵喵商店：官方店先不开，需要时再补应用信息与 PC/手机截图
+    enabled: false
+  private:
+    enabled: true
+    skip_if_version_exists: true
+    name: TokenRouter
+    summary: "TokenRouter 懒猫微服打包：自托管的 LLM 网关，一套 OpenAI 兼容接口接所有模型，带账号、额度、限流与用量统计。"

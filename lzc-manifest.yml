@@ -1,0 +1,110 @@
+application:
+  subdomain: tokenrouter
+  multi_instance: false
+  upstreams:
+    - location: /
+      backend: http://tokenrouter:8080
+  # 这是给客户端调用的 LLM 网关：终端、手机、Agent 都要能直接打到 /v1 接口，
+  # 所以整个站点放行微服登录（应用自带账号体系、API Key 与权限控制）。
+  public_path:
+    - /
+services:
+  tokenrouter:
+    # 交付（delivery.mode=lazycat）时由 Action 转存到懒猫镜像源并改写此行
+    # upstream: ghcr.io/tokenflux/tokenrouter:0.2.7
+    image: ghcr.io/tokenflux/tokenrouter:0.2.7
+    # 入口脚本以 root 起会先 chown /app/data 再切到镜像内的 tokenrouter 用户；
+    # 平台的 /lzcapp/var/* 由 root 创建，所以这里必须以 root 起
+    user: root
+    environment:
+      # 容器无人值守初始化：跑迁移 + 建管理员
+      AUTO_SETUP: "true"
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: "8080"
+      TZ: Asia/Shanghai
+      # 软内存上限（GC 提示），避免在小盒子上无限吃内存
+      GOMEMLIMIT: 4GiB
+      DATABASE_HOST: db
+      DATABASE_PORT: "5432"
+      DATABASE_USER: tokenrouter
+      DATABASE_PASSWORD: '{{ stable_secret "tokenrouter#db_password" }}'
+      DATABASE_DBNAME: tokenrouter
+      DATABASE_SSLMODE: disable
+      REDIS_HOST: cache
+      REDIS_PORT: "6379"
+      REDIS_DB: "0"
+      ADMIN_EMAIL: '{{ .U.admin_email }}'
+      # 留空则首次初始化时随机生成，并只打印一次到应用日志里
+      ADMIN_PASSWORD: '{{ .U.admin_password }}'
+      # 固定下来，重启不会把所有人踢下线（留空则每次启动随机生成）
+      JWT_SECRET: '{{ stable_secret "tokenrouter#jwt_secret" }}'
+    depends_on:
+      - db
+      - cache
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS http://127.0.0.1:8080/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
+    binds:
+      - /lzcapp/var/tokenrouter:/app/data
+  db:
+    # 与其他两个镜像一起由 Action 转存到懒猫镜像源（多镜像交付）
+    # upstream: library/postgres:18.6-alpine
+    image: library/postgres:18.6-alpine
+    # postgres 入口脚本以 root 起会先 chown 数据目录再降权；平台的 /lzcapp/var/db 属主是 root
+    user: root
+    environment:
+      # postgres:18 默认 PGDATA 在 /var/lib/postgresql/18/docker（镜像的匿名卷里）。
+      # 不显式指定的话，就算挂了下面的目录，数据也落不到盘上，容器重建会被重新 initdb；
+      # 上游 compose 也是这么处理的。
+      PGDATA: /var/lib/postgresql/data
+      POSTGRES_USER: tokenrouter
+      POSTGRES_PASSWORD: '{{ stable_secret "tokenrouter#db_password" }}'
+      POSTGRES_DB: tokenrouter
+      TZ: Asia/Shanghai
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U tokenrouter -d tokenrouter
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    binds:
+      - /lzcapp/var/db:/var/lib/postgresql/data
+  cache:
+    # upstream: library/redis:8.8-alpine
+    image: library/redis:8.8-alpine
+    # redis 入口脚本以 root 起会先 chown /data 再降权到 redis 用户
+    user: root
+    environment:
+      TZ: Asia/Shanghai
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - redis-cli ping | grep -q PONG
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    binds:
+      - /lzcapp/var/redis:/data
+usage: |
+  TokenRouter 是一个自托管的 LLM 网关：把各家模型供应商（OpenAI、Claude、Gemini、
+  DeepSeek……以及自建端点）统一成一套 OpenAI 兼容接口，带账号、额度、计费、限流
+  与用量统计；客户端只要改一个 base URL 就能接进来。
+
+  【登录】
+  用安装时填的管理员邮箱和密码打开控制台。密码留空的话，随机密码只在首次初始化时
+  打印一次（微服「应用详情 → 日志」里能看到），登录后请尽快改掉。
+
+  【接客户端】
+  站点是公开的——网关本来就是给外部客户端调用的。在控制台里为每个用途建一个
+  API Key，然后把客户端的 base URL 指到 https://你的应用域名/v1 即可。
+
+  【数据】
+  PostgreSQL 在 /lzcapp/var/db，应用数据（配置、上传物）在 /lzcapp/var/tokenrouter，
+  Redis 在 /lzcapp/var/redis，升级都不丢。

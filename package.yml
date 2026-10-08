@@ -1,0 +1,18 @@
+package: cloud.lazycat.app.tokenrouter
+version: 0.2.7
+name: TokenRouter
+description: TokenRouter is a self-hosted LLM gateway — unify OpenAI, Claude, Gemini, DeepSeek and custom endpoints behind one OpenAI-compatible API, with accounts, quotas, rate limits and usage analytics. LGPL-3.0.
+min_os_version: 1.5.0
+homepage: https://github.com/TokenFlux/TokenRouter
+author: TokenFlux
+license: LGPL-3.0
+locales:
+  zh:
+    name: "TokenRouter"
+    description: "自托管的 LLM 网关：把各家模型供应商统一成一套 OpenAI 兼容接口，带账号、额度、计费、限流与用量统计。"
+  zh_CN:
+    name: "TokenRouter"
+    description: "自托管的 LLM 网关：把各家模型供应商统一成一套 OpenAI 兼容接口，带账号、额度、计费、限流与用量统计。"
+  en:
+    name: "TokenRouter"
+    description: "Self-hosted LLM gateway: one OpenAI-compatible API for every provider, with accounts, quotas, rate limits and usage analytics."
