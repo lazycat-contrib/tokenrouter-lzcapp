@@ -12,7 +12,7 @@ services:
   tokenrouter:
     # 交付（delivery.mode=lazycat）时由 Action 转存到懒猫镜像源并改写此行
     # upstream: ghcr.io/tokenflux/tokenrouter:0.2.7
-    image: registry.lazycat.cloud/czyt/tokenflux/tokenrouter:dd0c2c93d57319ac
+    image: ghcr.io/tokenflux/tokenrouter:0.2.7
     # 入口脚本以 root 起会先 chown /app/data 再切到镜像内的 tokenrouter 用户；
     # 平台的 /lzcapp/var/* 由 root 创建，所以这里必须以 root 起
     user: root
