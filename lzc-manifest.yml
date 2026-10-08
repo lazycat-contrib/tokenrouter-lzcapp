@@ -52,9 +52,9 @@ services:
     binds:
       - /lzcapp/var/tokenrouter:/app/data
   db:
-    # 与其他两个镜像一起由 Action 转存到懒猫镜像源（多镜像交付）
+    # 镜像模式：依赖镜像不走 Action 版本跟踪，直接写加速前缀
     # upstream: library/postgres:18.6-alpine
-    image: library/postgres:18.6-alpine
+    image: docker.1ms.run/library/postgres:18.6-alpine
     # postgres 入口脚本以 root 起会先 chown 数据目录再降权；平台的 /lzcapp/var/db 属主是 root
     user: root
     environment:
@@ -78,7 +78,7 @@ services:
       - /lzcapp/var/db:/var/lib/postgresql/data
   cache:
     # upstream: library/redis:8.8-alpine
-    image: library/redis:8.8-alpine
+    image: docker.1ms.run/library/redis:8.8-alpine
     # redis 入口脚本以 root 起会先 chown /data 再降权到 redis 用户
     user: root
     environment:
