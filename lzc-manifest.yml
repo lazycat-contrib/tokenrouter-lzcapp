@@ -11,8 +11,8 @@ application:
 services:
   tokenrouter:
     # 镜像模式：Action 只读校验后把这一行改写成加速地址（ghcr.io → ghcr.1ms.run）
-    # upstream: ghcr.io/tokenflux/tokenrouter:0.2.7
-    image: ghcr.1ms.run/tokenflux/tokenrouter:0.2.7
+    # upstream: ghcr.io/tokenflux/tokenrouter:0.2.8
+    image: ghcr.1ms.run/tokenflux/tokenrouter:0.2.8
     # 入口脚本以 root 起会先 chown /app/data 再切到镜像内的 tokenrouter 用户；
     # 平台的 /lzcapp/var/* 由 root 创建，所以这里必须以 root 起
     user: root
